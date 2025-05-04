@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="ALEdefinition" load_steps=3 format=3 uid="uid://b8bkder1kf1k4"]
+
+[ext_resource type="Script" uid="uid://djkuuk1pwiutn" path="res://scripts/resources/ale_definition.gd" id="1_piarv"]
+[ext_resource type="Texture2D" uid="uid://cl2rs0mxx7de8" path="res://assets/cell.png" id="2_w0ohd"]
+
+[resource]
+script = ExtResource("1_piarv")
+texture = ExtResource("2_w0ohd")
+speed = 10.0
+size = Vector2(16, 16)
