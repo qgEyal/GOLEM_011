@@ -5,6 +5,13 @@
 
 [resource]
 script = ExtResource("1_piarv")
+seal_grid_size = 3
+core_instructions = ["INIT", "MOVE", "SENSE", "COMM", "PROC", "STORE", "EVOLVE"]
+symbol_id = 0
+symmetry_mode = 0
+mutation_rate = 0.6
+body_color = Color(0.3, 0.85, 0.9, 1)
+min_speed = 0.5
+max_speed = 2.0
 texture = ExtResource("2_w0ohd")
-speed = 10.0
 size = Vector2(16, 16)

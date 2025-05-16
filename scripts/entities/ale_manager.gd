@@ -1,50 +1,29 @@
 class_name ALEManager
 extends Node
-# ============================================================================
-#  GOLEM – ALE Manager (refactored)
-#  * constant‑time spatial lookup via `occupancy` dictionary
-#  * single‑pass shuffled spawning (no repeated RNG calls)
-#  * strict typing to avoid Variant warnings
-#  * respawn keeps the lookup tables consistent
-#  * ready for SEAL component expansion
-# ============================================================================
 
-# ---------------------------------------------------------------------------
-# External resources
-# ---------------------------------------------------------------------------
-const SEALSymbol := preload("res://scripts/seal/seal_symbol.gd")
+# ────────────────────────────────────────────────────────────────────────────
+#  GOLEM · ALEManager  – spawning & respawn logic (hybrid defaults ready)
+# ────────────────────────────────────────────────────────────────────────────
+@export var ale_scene      : PackedScene     # ALE.tscn
+@export var ale_definition : ALEdefinition   # baseline .tres
 
-@export var ale_scene      : PackedScene      # Scene that instantiates an ALE
-@export var ale_definition : Resource         # Shared ALE definition (.tres)
-
-# ---------------------------------------------------------------------------
-# Cached references (injected from Main)
-# ---------------------------------------------------------------------------
+# Injected from Main
 var map  : Map
 var main : Main
 
-# ---------------------------------------------------------------------------
-# World & ALE parameters
-# ---------------------------------------------------------------------------
-var tile_size       : int
-var ale_count       : int
-var ale_body_color  : Color
+var tile_size        : int
+var ale_count        : int
+var ale_body_color   : Color
 var default_trail_color : Color
 
-# Feature toggles
 var enable_visited_cells      := true
 var enable_trails             := true
 var enable_collision_handling := true
 
-# ---------------------------------------------------------------------------
-# Lookup tables
-# ---------------------------------------------------------------------------
-var ales      : Dictionary = {}  # name → ALE
-var occupancy : Dictionary = {}  # Vector2i → ALE  (spatial hash)
+var ales      : Dictionary = {}   # name → ALE
+var occupancy : Dictionary = {}   # Vector2i → ALE
 
-# ===========================================================================
-#  PUBLIC API
-# ===========================================================================
+# ───────────────────────────────── PUBLIC API
 func initialize(
 		map_node              : Map,
 		ts_init               : int,
@@ -56,44 +35,36 @@ func initialize(
 		trails_toggle         : bool,
 		collision_toggle      : bool
 	) -> void:
-	"""
-	Called once by Main.  Stores references and spawns all ALEs.
-	"""
-	# -- Checks ------------------------------------------------------
-	if not map_node:
-		push_error("ALEManager.initialize(): Map node is null")
-		return
-	if not ale_scene:
-		push_error("ALEManager.initialize(): 'ale_scene' not assigned")
-		return
-	if not ale_definition:
-		push_error("ALEManager.initialize(): 'ale_definition' missing")
+
+	if not map_node or not ale_scene or not ale_definition:
+		push_error("ALEManager.initialize(): missing references")
 		return
 
-	# -- Cache references ---------------------------------------------------
 	map                        = map_node
 	main                       = main_ref
 	tile_size                  = ts_init
 	ale_count                  = ac_init
 	ale_body_color             = body_color
 	default_trail_color        = trail_color
-
 	enable_visited_cells       = visited_cells_toggle
 	enable_trails              = trails_toggle
 	enable_collision_handling  = collision_toggle
 
-	# -----------------------------------------------------------------------
 	spawn_ales()
 
-
-func get_ale_at(grid_pos: Vector2i) -> ALE:
-	"""Constant‑time lookup for an ALE occupying *grid_pos* (or null)."""
+func get_ale_at(grid_pos : Vector2i) -> ALE:
 	return occupancy.get(grid_pos, null)
 
+# ───────────────────────────────── INTERNAL HELPERS
+func _create_definition_for_spawn(base : ALEdefinition) -> ALEdefinition:
+	var def_copy := base.duplicate(false) as ALEdefinition
+	# Inject baseline values from Main (hybrid pattern)
+	def_copy.body_color = ale_body_color
+	def_copy.min_speed  = main.min_speed
+	def_copy.max_speed  = main.max_speed
+	return def_copy
 
-# ===========================================================================
-#  INTERNAL
-# ===========================================================================
+# ───────────────────────────────── SPAWNING
 func spawn_ales() -> void:
 	if map.walkable_positions.is_empty():
 		push_error("ALEManager.spawn_ales(): no walkable positions")
@@ -111,17 +82,17 @@ func spawn_ales() -> void:
 					   + Vector2(tile_size * 0.5, tile_size * 0.5)
 
 		var ale : ALE = ale_scene.instantiate()
-		ale.name     = "ALE_%d" % spawned
-		ale.ale_id   = spawned
-		ale.grid_pos = grid_pos
+		ale.name   = "ALE_%d" % spawned
+		ale.ale_id = spawned
 		add_child(ale)
 
-		var seed_symbol := SEALSymbol.create_random(3)  # 3×3 starter symbol
+		var def_instance  := _create_definition_for_spawn(ale_definition)
+		var seed_symbol   := SEALSymbol.create_random(3)  # 3×3 starter
 
 		ale.initialize(
 			spawned,
-			ale_definition,
-			ale_body_color,
+			def_instance,
+			def_instance.body_color,
 			default_trail_color,
 			tile_size,
 			world_pos,
@@ -137,45 +108,39 @@ func spawn_ales() -> void:
 		occupancy[grid_pos] = ale
 		spawned += 1
 
-
-func respawn_ale(old_ale: ALE) -> void:
-	"""
-	Removes *old_ale* and spawns a replacement at a new random tile,
-	maintaining the same ID and node name.
-	"""
-	# -- remove from tables -------------------------------------------------
+# Respawn logic identical but now calls _create_definition_for_spawn()
+func respawn_ale(old_ale : ALE) -> void:
 	occupancy.erase(old_ale.grid_pos)
 	ales.erase(old_ale.name)
 
-	var id_cache    := old_ale.ale_id
-	var name_cache  := old_ale.name
-	var body_col    := old_ale.body_color
-	var trail_col   := old_ale.trail_color
+	var id_cache   := old_ale.ale_id
+	var name_cache := old_ale.name
+	var body_col   := old_ale.body_color
+	var trail_col  := old_ale.trail_color
 
 	old_ale.queue_free()
 
-	if map.walkable_positions.is_empty():
+	var positions := map.walkable_positions.duplicate()
+	positions.shuffle()
+	if positions.is_empty():
 		push_error("ALEManager.respawn_ale(): no walkable positions")
 		return
 
-	var positions := map.walkable_positions.duplicate()
-	positions.shuffle()
 	var spawn_grid_pos : Vector2i = positions[0]
-
 	var world_pos := Grid.grid_to_world(spawn_grid_pos.x, spawn_grid_pos.y, tile_size) \
 				   + Vector2(tile_size * 0.5, tile_size * 0.5)
 
 	var ale : ALE = ale_scene.instantiate()
-	ale.name     = name_cache
-	ale.ale_id   = id_cache
-	ale.grid_pos = spawn_grid_pos
+	ale.name   = name_cache
+	ale.ale_id = id_cache
 	add_child(ale)
 
-	var seed_symbol := SEALSymbol.create_random(3)
+	var def_instance  := _create_definition_for_spawn(ale_definition)
+	var seed_symbol   := SEALSymbol.create_random(3)
 
 	ale.initialize(
 		id_cache,
-		ale_definition,
+		def_instance,
 		body_col,
 		trail_col,
 		tile_size,
@@ -188,12 +153,5 @@ func respawn_ale(old_ale: ALE) -> void:
 		seed_symbol
 	)
 
-	ales[ale.name]      = ale
+	ales[ale.name]           = ale
 	occupancy[spawn_grid_pos] = ale
-
-
-# ---------------------------------------------------------------------------
-# Collision signal hook (placeholder for future use)
-# ---------------------------------------------------------------------------
-func _on_ale_collision(ale_name: String, collision_position: Vector2) -> void:
-	pass   # integrate with StatsPanel / SEAL resonance later

@@ -5,3 +5,4 @@
 *.tmp
 exports/
 export_presets.cfg
+index*

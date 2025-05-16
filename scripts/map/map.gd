@@ -53,7 +53,7 @@ enum TerrainType { VOID, FRAGMENTED, RAW, STABLE, STRUCTURED, ENERGETIC, PRIME, 
 
 
 ## Use initialize
-func initialize(ww_init: int, wh_init: int, ts_init:int, main_ref: Main):
+func initialize(ww_init: int, wh_init: int, ts_init:int, main_ref: Main) -> void:
 	width = ww_init # world width
 	height = wh_init # world height
 	tile_size = ts_init

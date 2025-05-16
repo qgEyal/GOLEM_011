@@ -1,4 +1,4 @@
-@icon("res://assets/icons/seal_symbol.svg")
+#@icon("res://assets/icons/seal_symbol.svg")
 # scripts/seal/seal_symbol.gd
 class_name SEALSymbol
 extends Resource
