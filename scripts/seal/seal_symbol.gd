@@ -6,7 +6,7 @@ extends Resource
 
 ## --- Symbol specification ---------------------------------------------------
 ## Grid is always square. 3 ≤ grid_size ≤ 8.
-## mirror_type matches the 7 modes you defined earlier.
+## mirror_type matches the 7 mirroring modes
 enum MirrorType  {
 	HORIZONTAL,
 	VERTICAL,
@@ -14,7 +14,7 @@ enum MirrorType  {
 	DIAGONAL_TL_BR,
 	DIAGONAL_TR_BL,
 	CROSS_DIAGONAL,
-	SPIRAL_CLOCKWISE
+	SPIRAL
 }
 
 @export var grid_size : int = 3 : set = _set_grid_size
@@ -86,7 +86,7 @@ func _to_string() -> String:
 	var mirror_names := [
 		"HORIZONTAL", "VERTICAL", "CROSS",
 		"DIAGONAL_TL_BR", "DIAGONAL_TR_BL",
-		"CROSS_DIAGONAL", "SPIRAL_CLOCKWISE"
+		"CROSS_DIAGONAL", "SPIRAL"
 	]
 	return "SEALSymbol(size=%d, mirror=%s, bits=%s)" % [
 		grid_size,

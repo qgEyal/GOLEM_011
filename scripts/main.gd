@@ -14,7 +14,11 @@ const GOLEM_VERSION : String = "0.2.4.7 – ALE hybrid method"
 @onready var ale_manager : ALEManager  = $ALEManager
 @onready var nav_cam     : Camera2D    = $NavCam
 @onready var grid_vis    : Node2D      = $GridVis
-@onready var stats_panel : StatsPanel  = $"../../../InfoBar/StatsPanelContainer/StatsPanel"
+#@onready var stats_panel : StatsPanel  = $"../../../InfoBar/StatsPanelContainer/StatsPanel"
+@onready var stats_panel: StatsPanel = %StatsPanel
+
+
+
 @onready var simulation_menu : SimulationMenu = $"../SimulationMenu"
 @onready var pause_label : Label = $"../CanvasLayer/PauseLabel"
 
@@ -88,6 +92,7 @@ func _ready() -> void:
 			GOLEM_VERSION,
 			GameColors.TEXT_BLUE
 		)
+
 
 # ───────────────────────────────── FRAME LOOP
 func _process(delta : float) -> void:

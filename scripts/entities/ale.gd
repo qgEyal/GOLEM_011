@@ -35,6 +35,8 @@ var enable_collision_handling : bool
 @export var seal_symbol : SEALSymbol
 var ale_id : int = -1
 
+
+
 # ───────────────────────────────── INITIALIZATION
 func initialize(
 		id                     : int,
@@ -88,6 +90,7 @@ func _ready() -> void:
 	if definition == null:
 		set_definition(_fallback_definition)
 
+
 	prev_grid_pos = grid_pos
 	set_process_mode(PROCESS_MODE_PAUSABLE)
 
@@ -105,6 +108,10 @@ func _apply_definition_data() -> void:
 
 	# Speed
 	move_speed = randf_range(definition.min_speed, definition.max_speed)
+	# display speed of individual Ales in Info window
+	var speed_msg : String = ("Speed of ALE %d: %f " % [ale_id, move_speed])
+	InfoLog.send_message(speed_msg, GameColors.TEXT_DEFAULT)
+
 
 	# Grid size (SEAL)
 	symbol_grid_size = definition.seal_grid_size

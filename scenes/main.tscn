@@ -1,4 +1,4 @@
-[gd_scene load_steps=16 format=3 uid="uid://ba5ybnkxh2cgj"]
+[gd_scene load_steps=17 format=3 uid="uid://ba5ybnkxh2cgj"]
 
 [ext_resource type="Script" uid="uid://yvcltyreu2r2" path="res://scripts/main.gd" id="1_ye3fh"]
 [ext_resource type="Script" uid="uid://cmy5v63888fd6" path="res://scripts/utlities/grid_vis.gd" id="2_fyhuy"]
@@ -13,6 +13,7 @@
 [ext_resource type="Script" uid="uid://h4xx0vsfguj" path="res://scripts/UI/message_log.gd" id="9_choun"]
 [ext_resource type="Script" uid="uid://c6bss4w3hm8va" path="res://scripts/UI/stats_panel.gd" id="9_eb6dy"]
 [ext_resource type="Script" uid="uid://cuigiebqwdef3" path="res://scripts/UI/stats_label.gd" id="9_ya4ey"]
+[ext_resource type="Script" uid="uid://dnca6c2ek1bx8" path="res://scripts/UI/info_log.gd" id="12_jkv2x"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_dbg08"]
 atlas = ExtResource("8_icbyt")
@@ -128,6 +129,7 @@ size_flags_horizontal = 3
 theme_override_styles/panel = SubResource("StyleBoxTexture_ltlv8")
 
 [node name="StatsPanel" type="VBoxContainer" parent="InterfaceRoot/MainHContainer/MainVContainer/InfoBar/StatsPanelContainer"]
+unique_name_in_owner = true
 layout_mode = 2
 script = ExtResource("9_eb6dy")
 
@@ -137,11 +139,22 @@ layout_mode = 2
 text = "G.O.L.E.M. Framework"
 script = ExtResource("9_ya4ey")
 
-[node name="InfoPanel" type="PanelContainer" parent="InterfaceRoot/MainHContainer/MainVContainer/InfoBar"]
+[node name="InfoPanelContainer" type="PanelContainer" parent="InterfaceRoot/MainHContainer/MainVContainer/InfoBar"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_stretch_ratio = 2.0
 theme_override_styles/panel = SubResource("StyleBoxTexture_ltlv8")
+
+[node name="InfoLog" type="ScrollContainer" parent="InterfaceRoot/MainHContainer/MainVContainer/InfoBar/InfoPanelContainer"]
+layout_mode = 2
+horizontal_scroll_mode = 0
+vertical_scroll_mode = 3
+script = ExtResource("12_jkv2x")
+
+[node name="InfoPanel" type="VBoxContainer" parent="InterfaceRoot/MainHContainer/MainVContainer/InfoBar/InfoPanelContainer/InfoLog"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
 
 [node name="SideBarContainer" type="VBoxContainer" parent="InterfaceRoot/MainHContainer"]
 layout_mode = 2
