@@ -1,9 +1,12 @@
 class_name Main
 extends Node2D
 
-# ────────────────────────────────────────────────────────────────────────────
-#  G.O.L.E.M. · Main entry point
-# ────────────────────────────────────────────────────────────────────────────
+'''
+────────────────────────────────────────────────────────────────────────────
+G.O.L.E.M.
+Artificial Life Simulator using Semiotic Emergent ALife Language protocols
+────────────────────────────────────────────────────────────────────────────
+'''
 const GOLEM_VERSION : String = "0.2.4.7 – ALE hybrid method"
 
 ## SUB‑VIEWPORT
@@ -72,6 +75,12 @@ func _ready() -> void:
 	else:
 		push_error("GridVis node not found!")
 
+	# ─── if this is a reset (we have saved params), skip menu ───
+	if SessionManager.params.size() > 0:
+		# re-apply the original user inputs and start immediately
+		apply_simulation_settings(SessionManager.params)
+		simulation_menu.visible = false
+		return
 	# UI → parameters round‑trip
 	if simulation_menu:
 		simulation_menu.populate_from_params({
@@ -120,6 +129,9 @@ func _process(delta : float) -> void:
 
 # ───────────────────────────────── PARAM INPUT
 func apply_simulation_settings(params : Dictionary) -> void:
+
+	# load values from session manager
+	SessionManager.params = params
 	world_width  = params.get("world_width",  world_width)
 	world_height = params.get("world_height", world_height)
 	max_turns    = params.get("max_turns",    max_turns)
@@ -132,8 +144,8 @@ func apply_simulation_settings(params : Dictionary) -> void:
 
 	simulation_active = true
 
-	MessageLog.send_message("G.O.L.E.M. Framework\nVERSION %s" % GOLEM_VERSION,
-							GameColors.TEXT_DEFAULT)
+	#MessageLog.send_message("G.O.L.E.M. Framework\nVERSION %s" % GOLEM_VERSION,
+							#GameColors.TEXT_DEFAULT)
 
 	var summary := "Map: %dx%d | ALEs: %d" % [world_width, world_height, ale_count]
 	MessageLog.send_message(summary, GameColors.TEXT_BLUE)
@@ -179,6 +191,15 @@ func _input(event) -> void:
 		InfoLog.send_message(str("Simulation speed: ", simulation_speed), GameColors.TEXT_INFO)
 		#print("Simulation Speed:", simulation_speed)
 	elif event.is_action_pressed("reset"):
+		MessageLog.send_message("+-- RESET SIMULATION --+", GameColors.TEXT_NOTICE)
+		#await get_tree().process_frame
+		#get_tree().reload_current_scene()
+		if SessionManager.params.size() > 0:
+			apply_simulation_settings(SessionManager.params)
+
+	elif event.is_action_pressed("restart"):
+		MessageLog.send_message("Restart simulation.", GameColors.TEXT_BLUE)
+		SessionManager.params.clear()
 		await get_tree().process_frame
 		get_tree().reload_current_scene()
 	elif event.is_action_pressed("ui_cancel"):

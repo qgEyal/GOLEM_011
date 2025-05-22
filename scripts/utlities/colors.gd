@@ -16,3 +16,4 @@ extends RefCounted
 const TEXT_BLUE = Color.CORNFLOWER_BLUE
 const TEXT_DEFAULT = Color.BISQUE
 const TEXT_INFO = Color("71e329")
+const TEXT_NOTICE = Color.FIREBRICK
