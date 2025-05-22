@@ -172,10 +172,12 @@ func _center_camera() -> void:
 func _input(event) -> void:
 	if event.is_action_pressed("ui_up"):
 		simulation_speed = min(simulation_speed + 0.1, 5.0)
-		print("Simulation Speed:", simulation_speed)
+		InfoLog.send_message(str("Simulation speed: ", simulation_speed), GameColors.TEXT_INFO)
+		#print("Simulation Speed:", simulation_speed)
 	elif event.is_action_pressed("ui_down"):
 		simulation_speed = max(simulation_speed - 0.1, 0.1)
-		print("Simulation Speed:", simulation_speed)
+		InfoLog.send_message(str("Simulation speed: ", simulation_speed), GameColors.TEXT_INFO)
+		#print("Simulation Speed:", simulation_speed)
 	elif event.is_action_pressed("reset"):
 		await get_tree().process_frame
 		get_tree().reload_current_scene()
