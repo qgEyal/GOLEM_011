@@ -32,8 +32,12 @@ var enable_visited_cells      : bool
 var enable_trails             : bool
 var enable_collision_handling : bool
 
-@export var seal_symbol : SEALSymbol
+var seal_symbol : SEALSymbol
 var ale_id : int = -1
+
+## Testing core command behavior
+
+var assigned_command: String
 
 
 
@@ -75,8 +79,17 @@ func initialize(
 	position        = Vector2(Grid.grid_to_world(grid_pos.x, grid_pos.y, tile_size)) \
 					+ Vector2(tile_size / 2.0, tile_size / 2.0)
 
-	# Assign definition (triggers _apply_definition_data)
+	## Assign definition (triggers _apply_definition_data)
 	set_definition(def)
+
+	# ─── INIT command log ───
+	#print("ALE %d INITIALIZED at %s" % [ale_id, str(grid_pos)])
+
+	## Pick fixed test command from ALEdefinition
+	var cmds := definition.core_instructions
+	assigned_command = cmds[randi() % cmds.size()]
+	print("ALE %d initialized at: %s. Assigned command %s" % [ale_id, str(grid_pos), assigned_command])
+
 
 func set_definition(value : ALEdefinition) -> void:
 	definition = value
@@ -85,7 +98,7 @@ func set_definition(value : ALEdefinition) -> void:
 
 func _ready() -> void:
 	while not main:
-		await get_tree().process_frame   # wait until injected
+		await get_tree().process_frame   # wait until injected into scene
 
 	if definition == null:
 		set_definition(_fallback_definition)
@@ -199,7 +212,57 @@ func handle_collision(_collision_pos : Vector2i) -> void:
 		stop_turns = base_stop_turns
 
 	stop_timer = stop_turns
+	'''
+	# ──────────────────────────────────────────────────────────────────
+	Establish collisions and core commands
+	# ──────────────────────────────────────────────────────────────────
+	'''
+	var other := get_colliding_ale(_collision_pos)
+	if other:
+		var msg := "ALE %d COLLIDED with ALE %d at %s. \nALE %d emits %s, ALE %d emits %s" % [
+			ale_id,
+			other.ale_id,
+			str(grid_pos),
+			ale_id,
+			assigned_command,
+			other.ale_id,
+			other.assigned_command
+		]
+		SignalBus.message_sent.emit(msg, main.collision_color)
+	else:
+		var msg := "ALE %d COLLIDED at %s emitting %s" % [
+			ale_id,
+			str(grid_pos),
+			assigned_command
+		]
+		SignalBus.message_sent.emit(msg, main.collision_color)
 
+	SignalBus.message_sent.emit("Stopping for: %d turns\n" % stop_turns,
+								main.collision_color)
+
+	'''
+	var other := get_colliding_ale(_collision_pos)
+	if other:
+		# pick a random command from each ALE’s core_instructions
+		var cmds := definition.core_instructions
+		var cmd_self  := cmds[randi() % cmds.size()]
+		var other_cmds := other.definition.core_instructions
+		var cmd_other := other_cmds[randi() % other_cmds.size()]
+
+		var msg := "ALE %d COLLIDED with ALE %d at %s. ALE %d emits %s, ALE %d emits %s" \
+			% [ale_id, other.ale_id, str(grid_pos), ale_id, cmd_self, other.ale_id, cmd_other]
+		SignalBus.message_sent.emit(msg, main.collision_color)
+	else:
+		# fallback single-ALE collision
+		var msg := "ALE %d COLLIDED at %s" % [ale_id, str(grid_pos)]
+		SignalBus.message_sent.emit(msg, main.collision_color)
+
+	SignalBus.message_sent.emit("Stopping for: %d turns" % stop_turns,
+								main.collision_color)
+
+	'''
+
+	'''
 	var other := get_colliding_ale(_collision_pos)
 	var msg : String = ("Collision: ALE %d & ALE %d at %s" % [ale_id, other.ale_id, str(grid_pos)]
 				if other
@@ -208,6 +271,8 @@ func handle_collision(_collision_pos : Vector2i) -> void:
 	SignalBus.message_sent.emit(msg, main.collision_color)
 	SignalBus.message_sent.emit("Stopping for: %d turns" % stop_turns,
 								main.collision_color)
+	'''
+
 
 func get_colliding_ale(target_pos : Vector2i) -> ALE:
 	for ale in get_parent().get_children():

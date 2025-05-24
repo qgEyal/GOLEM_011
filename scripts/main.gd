@@ -102,6 +102,8 @@ func _ready() -> void:
 			GameColors.TEXT_BLUE
 		)
 
+	randomize()
+
 
 # ───────────────────────────────── FRAME LOOP
 func _process(delta : float) -> void:
